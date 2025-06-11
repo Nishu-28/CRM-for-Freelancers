@@ -1,0 +1,307 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex justify-between items-center">
+    <h1 class="text-2xl font-bold text-gray-900">Projects</h1>
+    <button 
+      (click)="showAddProject = true"
+      class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition"
+    >
+      Add Project
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="flex gap-4 mb-6">
+    <input 
+      type="text" 
+      [(ngModel)]="searchTerm"
+      placeholder="Search projects..."
+      class="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+    >
+    <select 
+      [(ngModel)]="filterStatus"
+      class="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+    >
+      <option value="all">All Status</option>
+      <option value="planning">Planning</option>
+      <option value="active">Active</option>
+      <option value="on-hold">On Hold</option>
+      <option value="completed">Completed</option>
+      <option value="cancelled">Cancelled</option>
+    </select>
+    <select 
+      [(ngModel)]="filterPriority"
+      class="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+    >
+      <option value="all">All Priority</option>
+      <option value="high">High</option>
+      <option value="medium">Medium</option>
+      <option value="low">Low</option>
+    </select>
+  </div>
+
+  <!-- Stats -->
+  <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+    <div class="bg-blue-50 p-4 rounded-lg">
+      <div class="text-2xl font-bold text-blue-600">{{ getProjectsByStatus('planning').length }}</div>
+      <div class="text-sm text-gray-600">Planning</div>
+    </div>
+    <div class="bg-green-50 p-4 rounded-lg">
+      <div class="text-2xl font-bold text-green-600">{{ getProjectsByStatus('active').length }}</div>
+      <div class="text-sm text-gray-600">Active</div>
+    </div>
+    <div class="bg-yellow-50 p-4 rounded-lg">
+      <div class="text-2xl font-bold text-yellow-600">{{ getProjectsByStatus('on-hold').length }}</div>
+      <div class="text-sm text-gray-600">On Hold</div>
+    </div>
+    <div class="bg-purple-50 p-4 rounded-lg">
+      <div class="text-2xl font-bold text-purple-600">{{ getProjectsByStatus('completed').length }}</div>
+      <div class="text-sm text-gray-600">Completed</div>
+    </div>
+    <div class="bg-red-50 p-4 rounded-lg">
+      <div class="text-2xl font-bold text-red-600">{{ getProjectsByStatus('cancelled').length }}</div>
+      <div class="text-sm text-gray-600">Cancelled</div>
+    </div>
+  </div>
+
+  <!-- Projects Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div 
+      *ngFor="let project of filteredProjects" 
+      class="bg-white rounded-lg shadow-lg overflow-hidden"
+    >
+      <div class="p-6">
+        <div class="flex justify-between items-start mb-4">
+          <h3 class="text-lg font-semibold text-gray-900">{{ project.name }}</h3>
+          <div class="flex gap-1">
+            <button 
+              (click)="editProject(project)"
+              class="text-blue-600 hover:text-blue-800 text-sm"
+            >
+              Edit
+            </button>
+            <button 
+              (click)="deleteProject(project.id!)"
+              class="text-red-600 hover:text-red-800 text-sm"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+        
+        <p class="text-gray-600 text-sm mb-4">{{ project.description }}</p>
+        
+        <div class="flex items-center gap-2 mb-3">
+          <span 
+            class="px-2 py-1 text-xs rounded-full"
+            [ngClass]="getStatusBadgeClass(project.status)"
+          >
+            {{ project.status }}
+          </span>
+          <span 
+            class="px-2 py-1 text-xs rounded-full"
+            [ngClass]="getPriorityBadgeClass(project.priority)"
+          >
+            {{ project.priority }}
+          </span>
+        </div>
+        
+        <div class="text-sm text-gray-500 mb-3">
+          Client: {{ project.clientName }}
+        </div>
+        
+        <!-- Progress Bar -->
+        <div class="mb-3">
+          <div class="flex justify-between text-sm text-gray-600 mb-1">
+            <span>Progress</span>
+            <span>{{ project.progress }}%</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2">
+            <div 
+              class="bg-blue-500 h-2 rounded-full transition-all duration-300"
+              [style.width.%]="project.progress"
+            ></div>
+          </div>
+        </div>
+        
+        <div class="flex justify-between text-sm text-gray-500 mb-4">
+          <div *ngIf="project.startDate">
+            Start: {{ project.startDate | date:'shortDate' }}
+          </div>
+          <div *ngIf="project.endDate">
+            End: {{ project.endDate | date:'shortDate' }}
+          </div>
+        </div>
+        
+        <div *ngIf="project.budget" class="text-sm text-gray-500 mb-4">
+          Budget: ${{ project.budget.toLocaleString() }}
+        </div>
+        
+        <div class="flex gap-2">
+          <button 
+            *ngIf="project.status === 'planning'"
+            (click)="updateProjectStatus(project, 'active')"
+            class="text-xs bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded"
+          >
+            Start Project
+          </button>
+          <button 
+            *ngIf="project.status === 'active'"
+            (click)="updateProjectStatus(project, 'completed')"
+            class="text-xs bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded"
+          >
+            Complete
+          </button>
+          <button 
+            *ngIf="project.status === 'active'"
+            (click)="updateProjectStatus(project, 'on-hold')"
+            class="text-xs bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded"
+          >
+            Pause
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="filteredProjects.length === 0" class="text-center py-12">
+    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+    </svg>
+    <h3 class="mt-2 text-lg font-medium text-gray-900">No projects found</h3>
+    <p class="mt-1 text-gray-500">Get started by creating a new project.</p>
+  </div>
+</div>
+
+<!-- Add/Edit Project Modal -->
+<div *ngIf="showAddProject || editingProject" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white rounded-lg p-6 w-full max-w-lg">
+    <h2 class="text-xl font-bold mb-4">{{ editingProject ? 'Edit Project' : 'Add New Project' }}</h2>
+    
+    <form (ngSubmit)="saveProject()">
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Project Name</label>
+        <input 
+          type="text" 
+          [(ngModel)]="projectForm.name" 
+          name="name"
+          class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          required
+        >
+      </div>
+      
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+        <textarea 
+          [(ngModel)]="projectForm.description" 
+          name="description"
+          rows="3"
+          class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        ></textarea>
+      </div>
+      
+      <div class="grid grid-cols-2 gap-4 mb-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+          <select 
+            [(ngModel)]="projectForm.status" 
+            name="status"
+            class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="planning">Planning</option>
+            <option value="active">Active</option>
+            <option value="on-hold">On Hold</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+          <select 
+            [(ngModel)]="projectForm.priority" 
+            name="priority"
+            class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Client</label>
+        <input 
+          type="text" 
+          [(ngModel)]="projectForm.clientName" 
+          name="clientName"
+          class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Enter client name"
+        >
+      </div>
+      
+      <div class="grid grid-cols-2 gap-4 mb-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+          <input 
+            type="date" 
+            [(ngModel)]="projectForm.startDate" 
+            name="startDate"
+            class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+          <input 
+            type="date" 
+            [(ngModel)]="projectForm.endDate" 
+            name="endDate"
+            class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+        </div>
+      </div>
+      
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Budget ($)</label>
+        <input 
+          type="number" 
+          [(ngModel)]="projectForm.budget" 
+          name="budget"
+          class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Enter budget amount"
+        >
+      </div>
+      
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Progress (%)</label>
+        <input 
+          type="number" 
+          [(ngModel)]="projectForm.progress" 
+          name="progress"
+          min="0"
+          max="100"
+          class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+      </div>
+      
+      <div class="flex gap-2">
+        <button 
+          type="submit"
+          class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded transition"
+        >
+          {{ editingProject ? 'Update' : 'Create' }}
+        </button>
+        <button 
+          type="button"
+          (click)="cancelEdit()"
+          class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded transition"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+</div> 

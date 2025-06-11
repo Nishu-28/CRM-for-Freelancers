@@ -1,0 +1,95 @@
+<div class="bg-white rounded-lg shadow-md p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">Invoices</h2>
+        <a routerLink="/invoices/new" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition">
+            Create Invoice
+        </a>
+    </div>
+
+    <div class="mb-6 flex items-center space-x-4">
+        <label class="text-sm font-medium text-gray-700">Filter by status:</label>
+        <select [(ngModel)]="filterStatus"
+            class="mt-1 block w-32 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+            <option value="all">All</option>
+            <option value="paid">Paid</option>
+            <option value="unpaid">Unpaid</option>
+        </select>
+    </div>
+
+    <div *ngIf="isLoading" class="flex justify-center items-center h-64">
+        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+    </div>
+
+    <div *ngIf="!isLoading && filteredInvoices.length === 0" class="text-center py-12">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <h3 class="mt-2 text-lg font-medium text-gray-900">No invoices</h3>
+        <p class="mt-1 text-gray-500">Get started by creating a new invoice.</p>
+        <div class="mt-6">
+            <a routerLink="/invoices/new"
+                class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                    fill="currentColor">
+                    <path fill-rule="evenodd"
+                        d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                        clip-rule="evenodd" />
+                </svg>
+                New Invoice
+            </a>
+        </div>
+    </div>
+
+    <div *ngIf="!isLoading && filteredInvoices.length > 0" class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col"
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice #
+                    </th>
+                    <th scope="col"
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client
+                    </th>
+                    <th scope="col"
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th scope="col"
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date
+                    </th>
+                    <th scope="col"
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount
+                    </th>
+                    <th scope="col"
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status
+                    </th>
+                    <th scope="col" class="relative px-6 py-3"><span class="sr-only">Actions</span></th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                <tr *ngFor="let invoice of filteredInvoices" class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#{{ invoice.invoiceNumber
+                        }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ invoice.clientName }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ invoice.date | date }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ invoice.dueDate | date }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${{ invoice.totalAmount.toFixed(2) }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                            [ngClass]="getStatusBadgeClass(invoice.status)">
+                            {{ invoice.status }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button (click)="exportInvoiceToPdf(invoice)"
+                            class="text-green-600 hover:text-green-900 mr-4">Export PDF</button>
+                        <button (click)="editInvoice(invoice.id)"
+                            class="text-blue-600 hover:text-blue-900 mr-4">Edit</button>
+                        <button (click)="deleteInvoice(invoice.id)"
+                            class="text-red-600 hover:text-red-900">Delete</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
